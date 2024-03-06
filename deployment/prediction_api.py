@@ -1,5 +1,15 @@
 # prediction_api.py
+import sys
+import os
 
+# Get the absolute path of the 'models' directory
+models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models'))
+
+# Add the 'models' directory to the Python module search path
+sys.path.append(models_dir)
+
+# Now you can import ml_models
+from ml_models import train_model, predict
 from flask import Flask, request, jsonify
 from ml_models import train_model, predict
 

@@ -54,12 +54,22 @@ This will start the Flask development server, and your application will be acces
 
 Data Collection:
 
-Run data_collection.py to fetch raw financial data from APIs or data sources.
-Run data_preprocessing.py to preprocess the raw data for analysis.
+scripts: 
+
+cd scripts: python3 data_collection.py 
+
+to fetch raw financial data from APIs or data sources.
+
+cd scripts: python3 data_preprocessing.py 
+
+to preprocess the raw data for analysis.
 
 Model Training and Prediction:
 
-Train machine learning models using ml_models.py.
+Train machine learning models using:
+
+cd models - python3 ml_models.py.
+
 Evaluate model performance and validate models using model_evaluation.py and model_validation.py.
 Deploy the prediction API using prediction_api.py for real-time predictions.
 

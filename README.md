@@ -33,6 +33,25 @@ pip install -r requirements.txt
 
 # Usage
 
+Activate Virtual Environment (if not already activated):
+
+source venv/bin/activate
+
+Set Flask App Environment Variable:
+
+export FLASK_APP=app.py
+
+Set Flask Environment (Development, Production, etc.):
+
+export FLASK_ENV=development
+
+Run Flask Application:
+
+flask run
+
+This will start the Flask development server, and your application will be accessible at the specified address (usually http://127.0.0.1:5000/ by default).
+
+
 Data Collection:
 
 Run data_collection.py to fetch raw financial data from APIs or data sources.

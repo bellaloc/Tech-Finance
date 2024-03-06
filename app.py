@@ -4,6 +4,10 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import io
 import base64
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -53,4 +57,8 @@ def scatter_plot():
     return scatter_plot_html
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Get the value of DEBUG from environment variables, defaulting to False if not set
+    debug = os.getenv("DEBUG", False)
+
+    # Run the app with debug mode enabled/disabled based on the value in the .env file
+    app.run(debug=debug)

@@ -16,6 +16,10 @@ from ml_models import train_model, predict
 app = Flask(__name__)
 model = None
 
+@app.route('/')
+def index():
+    return 'Welcome to the Prediction API!'
+
 @app.route("/train", methods=["POST"])
 def train():
     global model

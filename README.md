@@ -1,38 +1,30 @@
-# Tech Finance Project
+# Tech-Finance
 
-Christa Lococo
+Christa Lococo — educational forecast evaluation lab. Not investment advice, live trading, or a validated stock predictor.
 
-An experimental financial-data analysis project. This is not investment advice,
-a live trading system, or a validated investment predictor.
+## Run the dashboard
 
-## Implemented in this branch
-
-- Dependency-free CSV validation and chronological one-step forecast evaluation.
-- Persistence (last observed price) and trailing moving-average baselines.
-- MAE and RMSE on a fixed chronological holdout, with observed history updated
-  after each prediction. No future observations enter a prediction.
-- Unit tests for known errors, future-data isolation and invalid inputs.
-
-Run from the repository root with Python 3.12:
+From the repository root, with Python 3.12:
 
 ```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-web.txt
 python -m unittest discover -s tests -v
-python -c "from evaluation.backtest import load_prices,evaluate; print(evaluate(load_prices('data/raw_data/raw_data.csv')))"
+python app.py
 ```
 
-The repository's sample generator produces synthetic prices for ten dates in
-January 2022. Treat bundled data as demo data unless provenance is independently
-established. For historical evaluation, supply a CSV with documented source,
-symbol, adjustment policy and dates, using columns date,price in ascending order.
-No market performance, profitability or predictive advantage is claimed.
+Open http://127.0.0.1:5000. The read-only dashboard supports moving-average window selection (2, 3 or 5 observations), toggling chart series, accessible tabular results and invalid-input handling. No external chart service or API key is required. The bundled data/demo_prices.csv contains 20 deliberately synthetic daily observations, not actual trading dates or market prices.
 
-## Existing prototype and remaining work
+## Evaluation
 
-The legacy Flask application, model scripts and requirements remain for review;
-the web interface is not verified, dependencies are outdated and its template
-path needs repair. Interactive charts, historical dataset provenance, model
-comparison beyond baselines, dependency/security updates and deployment are
-pending. No production deployment is authorized by this branch.
+CSV inputs require ascending unique ISO dates and positive finite prices. The last 40% of observations form a chronological holdout (with enough initial observations for the selected window). Persistence and trailing moving average use only observed history before each forecast. MAE and RMSE measure one-step price error, not returns. The window selector is educational; selecting a model on holdout results would invalidate an independent final evaluation.
 
-The original README described an MIT license, but no LICENSE file was found in
-the repository tree; confirm the intended license before redistribution.
+For real historical evaluation, supply a CSV with documented source, symbol, adjustment policy and dates:
+```sh
+python -c "from evaluation.backtest import load_prices,evaluate; print(evaluate(load_prices('data/demo_prices.csv')))"
+```
+
+## Deployment and limitations
+
+Use requirements-web.txt for the dashboard, not the legacy requirements.txt. A production WSGI host must import app:app, use Python 3.12, and install a supported WSGI server; Flask's development server is local only. No production deployment is authorized. Preview hosting, browser interaction verification, dependency locking/security audit, historical data provenance and model comparison beyond baselines remain outstanding. Legacy scripts and dependencies are not validated and are not imported by the dashboard. The original README mentioned MIT but no LICENSE file was found; confirm intended license before redistribution.

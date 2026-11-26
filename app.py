@@ -1,56 +1,21 @@
-from flask import Flask, render_template
-import pandas as pd
-import plotly.express as px
-import matplotlib.pyplot as plt
-import io
-import base64
+"""Read-only demonstration dashboard; no live market or trading claims."""
+from pathlib import Path
+from flask import Flask, render_template, request
+from evaluation.backtest import load_prices, evaluate
 
-app = Flask(__name__)
+ROOT = Path(__file__).resolve().parent
+app = Flask(__name__, template_folder=str(ROOT / "deployment/app/templates"))
 
-# Function to generate a line plot using Matplotlib and return it as a base64-encoded image
-def generate_line_plot(data):
-    plt.figure(figsize=(10, 6))
-    plt.plot(data['Date'], data['Value'], marker='o')
-    plt.title('Tech-Finance Data')
-    plt.xlabel('Date')
-    plt.ylabel('Value')
-    plt.grid(True)
-    
-    # Convert the plot to a base64-encoded image
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    plot_data = base64.b64encode(buffer.getvalue()).decode()
-    plt.close()
-    
-    return plot_data
-
-@app.route("/")
+@app.get("/")
 def index():
-    # Read processed data from CSV file
-    processed_data = pd.read_csv("data/processed_data/processed_data.csv")
-    
-    # Convert processed data to a list of dictionaries for easy rendering in template
-    data_list = processed_data.to_dict(orient='records')
-    
-    # Generate line plot using Matplotlib
-    line_plot_data = generate_line_plot(processed_data)
-    
-    # Pass the processed data and line plot data to the template for rendering
-    return render_template("index.html", data=data_list, line_plot=line_plot_data)
-
-@app.route("/scatter")
-def scatter_plot():
-    # Read processed data from CSV file
-    processed_data = pd.read_csv("data/processed_data/processed_data.csv")
-    
-    # Generate scatter plot using Plotly
-    scatter_plot = px.scatter(processed_data, x='Date', y='Value', title='Tech-Finance Scatter Plot')
-    
-    # Convert scatter plot to HTML format
-    scatter_plot_html = scatter_plot.to_html()
-    
-    return scatter_plot_html
+    try:
+        window = int(request.args.get("window", "3"))
+        if window not in (2, 3, 5):
+            raise ValueError("Choose a window of 2, 3 or 5 observations.")
+        result = evaluate(load_prices(ROOT / "data/demo_prices.csv"), window=window)
+    except (ValueError, OSError):
+        return render_template("index.html", error="Unable to evaluate the demo. Choose a valid window or try again later.", result=None, window=3), 400
+    return render_template("index.html", result=result, window=window, error=None)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

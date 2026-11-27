@@ -25,6 +25,16 @@ For real historical evaluation, use a locally obtained CSV that you have permiss
 python -c "from evaluation.backtest import load_prices,evaluate; print(evaluate(load_prices('../historical_prices.csv')))"
 ```
 
+## Independent regression benchmark
+
+For a separate 60/20/20 chronological train/validation/test evaluation, use the rolling linear regression benchmark. It selects a trailing window (3, 5 or 10 observations) by validation MAE, freezes that choice, and compares regression, persistence and moving average on the same final test dates. Each forecast uses only previously observed prices. At least 17 observations are required with default windows; use substantially more for meaningful evaluation.
+
+```sh
+python -c "from evaluation.backtest import load_prices; from evaluation.walk_forward import walk_forward; print(walk_forward(load_prices('../historical_prices.csv')))"
+```
+
+This is an offline benchmark, not yet integrated into the dashboard. Synthetic tests verify mechanics, not market predictive ability. Do not tune against the final test or interpret price error as trading profitability.
+
 ## Deployment and limitations
 
-Use requirements-web.txt for the dashboard, not the legacy requirements.txt. A production WSGI host must import app:app, use Python 3.12, and install a supported WSGI server; Flask's development server is local only. No production deployment is authorized. Preview hosting, browser interaction verification, dependency locking/security audit, historical data provenance and model comparison beyond baselines remain outstanding. Legacy scripts and dependencies are not validated and are not imported by the dashboard. The original README mentioned MIT but no LICENSE file was found; confirm intended license before redistribution.
+Use requirements-web.txt for the dashboard, not the legacy requirements.txt. A production WSGI host must import app:app, use Python 3.12, and install a supported WSGI server; Flask's development server is local only. Production deployment requires passing build, tests, security review and readiness checks; none has been verified. Preview hosting, browser interaction verification, dependency locking/security audit, historical data provenance and historical regression results remain outstanding. Legacy scripts and dependencies are not validated and are not imported by the dashboard. The original README mentioned MIT but no LICENSE file was found; confirm intended license before redistribution.

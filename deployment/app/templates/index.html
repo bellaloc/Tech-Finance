@@ -1,26 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech-Finance App</title>
-</head>
-<body>
-    <h1>Welcome to the Tech-Finance App!</h1>
-    
-    <h2>Data:</h2>
-    <ul>
-        {% for item in data %}
-            <li>{{ item }}</li>
-        {% endfor %}
-    </ul>
-    
-    <h2>Line Plot:</h2>
-    <img src="data:image/png;base64,{{ line_plot }}" alt="Line Plot">
-    
-    <h2>Scatter Plot:</h2>
-    <div>
-        {{ scatter_plot | safe }}
-    </div>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tech-Finance | Forecast evaluation</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#e7edf5;font:1rem/1.6 system-ui,sans-serif}main{max-width:960px;margin:auto;padding:clamp(16px,4vw,40px)}section{background:#1b2739;border-radius:12px;padding:20px;margin:20px 0}h1,h2{line-height:1.2}a{color:#9bd5ff}label,select,button{font:inherit}select,button{padding:10px;border-radius:6px}button{background:#a5d8ff;color:#101827;border:0;cursor:pointer}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:8px;border-bottom:1px solid #65748b}.scroll{overflow-x:auto}svg{width:100%;height:auto}fieldset{border:0;padding:0}input{margin-right:6px}:focus-visible{outline:3px solid #f9d778;outline-offset:3px}
+</style></head><body><main>
+<header><p>Christa Lococo · Tech-Finance</p><h1>Forecast evaluation lab</h1><p><strong>Synthetic demo data.</strong> Not live market prices, investment advice or a trading strategy.</p></header>
+<form method="get"><label for="window">Moving-average window</label> <select id="window" name="window">{% for n in [2,3,5] %}<option value="{{ n }}" {% if n == window %}selected{% endif %}>{{ n }} observations</option>{% endfor %}</select> <button>Recalculate</button></form>
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+{% if result %}
+<section><h2>Chronological holdout</h2><p>{{ result.train_count }} initial observations · {{ result.test_count }} evaluated observations. Each forecast uses only earlier observed prices.</p>
+<fieldset><legend>Visible chart series</legend><label><input type="checkbox" data-series="actual" checked>Actual</label> <label><input type="checkbox" data-series="persistence" checked>Previous price</label> <label><input type="checkbox" data-series="moving_average" checked>Moving average</label></fieldset>
+<svg id="chart" viewBox="0 0 640 280" role="img" aria-label="Forecast and actual price lines over holdout dates; exact values in table below"></svg>
+<p id="chart-status" aria-live="polite"></p>
+<noscript>Enable JavaScript for the interactive chart; all results are available below.</noscript></section>
+<section><h2>Forecast errors (price units)</h2><div class="scroll"><table><thead><tr><th scope="col">Baseline</th><th scope="col">MAE</th><th scope="col">RMSE</th></tr></thead><tbody>{% for model, scores in result.metrics.items() %}<tr><th scope="row">{{ model.replace('_',' ') }}</th><td>{{ '%.3f'|format(scores.mae) }}</td><td>{{ '%.3f'|format(scores.rmse) }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section><h2>Holdout observations</h2><div class="scroll"><table><thead><tr><th scope="col">Date</th><th scope="col">Actual</th><th scope="col">Previous price</th><th scope="col">Moving average</th></tr></thead><tbody>{% for row in result.predictions %}<tr><th scope="row">{{ row.date }}</th><td>{{ '%.2f'|format(row.actual) }}</td><td>{{ '%.2f'|format(row.persistence) }}</td><td>{{ '%.2f'|format(row.moving_average) }}</td></tr>{% endfor %}</tbody></table></div></section>
+<script>
+const rows={{ result.predictions|tojson }};
+const chart=document.getElementById('chart'), ns='http://www.w3.org/2000/svg';
+const colors={actual:'#a5d8ff',persistence:'#f9d778',moving_average:'#f2a6ca'};
+const values=rows.flatMap(r=>Object.keys(colors).map(k=>r[k]));
+const low=Math.min(...values), high=Math.max(...values);
+const x=i=>64+i*548/Math.max(1,rows.length-1), y=v=>230-(v-low)*200/Math.max(1,high-low);
+function node(tag,attrs,content){const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(content!==undefined)n.textContent=content;chart.append(n);return n;}
+function draw(){chart.replaceChildren();for(let i=0;i<=4;i++){const v=low+(high-low)*i/4;node('line',{x1:64,x2:612,y1:y(v),y2:y(v),stroke:'#65748b'});node('text',{x:4,y:y(v)+5,fill:'#e7edf5','font-size':13},v.toFixed(1));}
+const selected=[...document.querySelectorAll('[data-series]:checked')].map(e=>e.dataset.series);
+selected.forEach(k=>node('polyline',{points:rows.map((r,i)=>x(i)+','+y(r[k])).join(' '),fill:'none',stroke:colors[k],'stroke-width':3,'stroke-dasharray':k==='actual'?'none':k==='persistence'?'8 4':'2 5'}));
+node('text',{x:64,y:258,fill:'#e7edf5','font-size':13},rows[0].date);node('text',{x:612,y:258,fill:'#e7edf5','font-size':13,'text-anchor':'end'},rows.at(-1).date);
+document.getElementById('chart-status').textContent=selected.length?'Showing '+selected.map(k=>k.replace('_',' ')).join(', '):'No series selected.';}
+document.querySelectorAll('[data-series]').forEach(e=>e.addEventListener('change',draw));draw();
+</script>
+{% endif %}<footer><p>Educational prototype · <a href="https://github.com/bellaloc/Tech-Finance">Source repository</a></p></footer></main></body></html>

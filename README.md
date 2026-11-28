@@ -1,91 +1,40 @@
-# Tech Finance Project
+# Tech-Finance
 
-## Overview
-The Tech Finance Project is a cutting-edge system designed to predict safe and valuable investments in real-time. Leveraging advanced technologies and machine learning models, this project aims to provide investors with actionable insights to optimize their investment strategies and maximize returns.
+Christa Lococo — educational forecast evaluation lab. Not investment advice, live trading, or a validated stock predictor.
 
-## Features
+## Run the dashboard
 
-- **Data Collection:** Fetches real-time financial data from various sources, including stock market APIs, company financial reports, economic indicators, news sentiment analysis, and social media sentiment.
+From the repository root, with Python 3.12:
 
-- **Data Processing:** Preprocesses raw data to clean, transform, and prepare it for analysis and modeling.
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-web.txt
+python -m unittest discover -s tests -v
+python app.py
+```
 
-- **Machine Learning Models:** Trains predictive models using algorithms such as random forests, gradient boosting, LSTM networks, and sentiment analysis to forecast future investment performance.
+Open http://127.0.0.1:5000. The read-only dashboard supports moving-average window selection (2, 3 or 5 observations), toggling chart series, accessible tabular results and invalid-input handling. No external chart service or API key is required. The bundled data/demo_prices.csv contains 20 deliberately synthetic daily observations, not actual trading dates or market prices.
 
-- **Feature Engineering and Selection:** Identifies and engineers informative features from the data and selects the most relevant ones for model training.
+## Evaluation
 
-- **Model Evaluation and Validation:** Evaluates model performance using metrics such as mean squared error and validates models on validation datasets.
+CSV inputs require ascending unique ISO dates and positive finite prices. The last 40% of observations form a chronological holdout (with enough initial observations for the selected window). Persistence and trailing moving average use only observed history before each forecast. MAE and RMSE measure one-step price error, not returns. The window selector is educational; selecting a model on holdout results would invalidate an independent final evaluation.
 
-- **Real-time Prediction and Deployment:** Deploys a scalable and efficient system for real-time investment prediction, providing users with recommendations based on their preferences and risk tolerance.
+For real historical evaluation, use a locally obtained CSV that you have permission to use. Do not commit or redistribute restricted market data. Record the provider URL, symbol, retrieval date, frequency, currency, adjustment policy, date range and SHA-256 of the original and normalized files. Normalize to `date,price`, omit missing observations explicitly, and keep actual trading dates (do not forward-fill holidays). Place the normalized file outside this repository. The command below expects that file; no historical results have been verified yet.
+```sh
+python -c "from evaluation.backtest import load_prices,evaluate; print(evaluate(load_prices('../historical_prices.csv')))"
+```
 
-- **User Interface and Visualization:** Develops an intuitive web-based or mobile application with interactive data visualization features to display investment insights and predicted trends.
+## Independent regression benchmark
 
-- **Continuous Monitoring and Improvement:** Implements mechanisms to monitor model performance, update models with new data, and continuously improve prediction accuracy and reliability.
+For a separate 60/20/20 chronological train/validation/test evaluation, use the rolling linear regression benchmark. It selects a trailing window (3, 5 or 10 observations) by validation MAE, freezes that choice, and compares regression, persistence and moving average on the same final test dates. Each forecast uses only previously observed prices. At least 17 observations are required with default windows; use substantially more for meaningful evaluation.
 
-## Installation
+```sh
+python -c "from evaluation.backtest import load_prices; from evaluation.walk_forward import walk_forward; print(walk_forward(load_prices('../historical_prices.csv')))"
+```
 
-1. **Clone the repository:**
-   
-   git clone https://github.com/bellaloc/Tech-Finance.git
+This is an offline benchmark, not yet integrated into the dashboard. Synthetic tests verify mechanics, not market predictive ability. Do not tune against the final test or interpret price error as trading profitability.
 
-Install the required dependencies:
+## Deployment and limitations
 
-pip install -r requirements.txt
-
-# Usage
-
-Activate Virtual Environment (if not already activated):
-
-source venv/bin/activate
-
-Set Flask App Environment Variable:
-
-export FLASK_APP=app.py
-
-Set Flask Environment (Development, Production, etc.):
-
-export FLASK_ENV=development
-
-Run Flask Application:
-
-flask run
-
-This will start the Flask development server, and your application will be accessible at the specified address (usually http://127.0.0.1:5000/ by default).
-
-
-Data Collection:
-
-scripts: 
-
-cd scripts: python3 data_collection.py 
-
-to fetch raw financial data from APIs or data sources.
-
-cd scripts: python3 data_preprocessing.py 
-
-to preprocess the raw data for analysis.
-
-Model Training and Prediction:
-
-Train machine learning models using:
-
-cd models - python3 ml_models.py.
-
-Evaluate model performance and validate models using model_evaluation.py and model_validation.py.
-Deploy the prediction API using prediction_api.py for real-time predictions.
-
-User Interface and Visualization:
-
-Develop a web-based or mobile application using frameworks like Flask, Django, or React.js with appropriate visualization libraries.
-
-Continuous Monitoring and Improvement:
-
-Implement monitoring mechanisms in model_monitoring.py to track model performance.
-
-Update models periodically with new data using model_update.py to ensure continuous improvement.
-
-Contributors
-
-Christa Lococo
-License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+Use requirements-web.txt for the dashboard, not the legacy requirements.txt. A production WSGI host must import app:app, use Python 3.12, and install a supported WSGI server; Flask's development server is local only. Production deployment requires passing build, tests, security review and readiness checks; none has been verified. Preview hosting, browser interaction verification, dependency locking/security audit, historical data provenance and historical regression results remain outstanding. Legacy scripts and dependencies are not validated and are not imported by the dashboard. The original README mentioned MIT but no LICENSE file was found; confirm intended license before redistribution.
